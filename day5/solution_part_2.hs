@@ -16,6 +16,13 @@ parseCol xs = head $ parseCol' xs [0..7]
     parseCol' ('L':xs) rows = parseCol' xs $ take (div (length rows) 2) rows
     parseCol' ('R':xs) rows = parseCol' xs $ drop (div (length rows) 2) rows
 
+firstNotAtStart :: [Int] -> Int
+firstNotAtStart xs = head $ firstNotAtStart' xs
+  where
+    firstNotAtStart' (x:y:ys)
+      | x + 1 == y = firstNotAtStart' (y:ys)
+      | otherwise  = [y]
+
 solve :: String -> Int
 solve xs = (row * 8) + col
   where
@@ -28,5 +35,5 @@ main = do
   let allSeatIds = map solve . lines $ input
   let maxSeatId = maximum allSeatIds
   let missingSeats = [0..maxSeatId] \\ allSeatIds
-  print missingSeats -- I could do math on this, but it is so easy to see the missing one from this so yolo
+  print $ firstNotAtStart missingSeats
   hClose fh
