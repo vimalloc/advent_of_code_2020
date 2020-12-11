@@ -7,15 +7,14 @@ import qualified Data.Set as Set
 
 type Operation = (String, Int)
 
--- TODO: How can I do this without having to go one line at a time, so that I
---       can preserve line number for errors (and remove that filter).
 parseInput :: String -> Either ParseError [Operation]
-parseInput = traverse (parse parseLine "testInput") . filter (/= "") . splitOn "\n"
+parseInput = parse (many parseLine) "input"
   where
     parseLine = do
-      operation <- try (string "nop") <|> try (string "acc") <|> try (string "jmp")
+      operation <- choice [string "nop", string "acc", string "jmp"]
       space
       value <- int
+      optional $ char '\n'
       pure (operation, value)
 
 solve :: [Operation] -> Int
