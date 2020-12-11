@@ -8,7 +8,7 @@ import qualified Data.Set as Set
 type Operation = (String, Int)
 
 parseInput :: String -> Either ParseError [Operation]
-parseInput = parse (many parseLine) "input"
+parseInput = parse (manyTill parseLine eof) "input"
   where
     parseLine = do
       operation <- choice [string "nop", string "acc", string "jmp"]
