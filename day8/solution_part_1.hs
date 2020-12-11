@@ -5,31 +5,34 @@ import Text.ParserCombinators.Parsec.Number
 import Text.Parsec.String (Parser)
 import qualified Data.Set as Set
 
-testInput :: String
-testInput = "nop +0\nacc +1\njmp +4\nacc +3\njmp -3\nacc -99\nacc +1\njmp -4\nacc +6"
-
 type Operation = (String, Int)
 
--- TODO: Instead of parsing on each line, lets parse the whole thing in one go.
+-- TODO: How can I do this without having to go one line at a time, so that I
+--       can preserve line number for errors (and remove that filter).
 parseInput :: String -> Either ParseError [Operation]
-parseInput = traverse (parse parseLine "testInput") . splitOn "\n"
+parseInput = traverse (parse parseLine "testInput") . filter (/= "") . splitOn "\n"
   where
     parseLine = do
       operation <- try (string "nop") <|> try (string "acc") <|> try (string "jmp")
       space
       value <- int
-      return (operation, value)
+      pure (operation, value)
 
-solve :: [String] -> Int
-solve x = solve' 0 0 (Set.fromList []) 
+solve :: [Operation] -> Int
+solve operations = solve' 0 0 (Set.fromList []) 
   where
-    solve' :: Int -> Int -> Set.Set String -> Int
-    solve' index counter seen = 0
+    solve' :: Int -> Int -> Set.Set Int -> Int
+    solve' index counter seen
+      | Set.member index seen = counter
+      | operation == "nop"    = solve' (index + 1) counter $ Set.insert index seen
+      | operation == "jmp"    = solve' (index + value) counter $ Set.insert index seen
+      | operation == "acc"    = solve' (index + 1) (counter + value) (Set.insert index seen)
       where
-        foo = "bar"
+        operation = fst $ operations !! index
+        value = snd $ operations !! index
 
 main = do
-  print testInput
-  case (parseInput testInput) of
-    Right operations -> print operations
+  input <- readFile "input.txt"
+  case (parseInput input) of
+    Right operations -> print . solve $ operations
     Left error       -> print error
